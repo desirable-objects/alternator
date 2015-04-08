@@ -11,12 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "config": "^1.12.0",
+    "datauri": "^0.6.0",
     "dir-to-json": "0.0.3",
     "dir-tree": "^1.0.1",
     "handlebars": "^3.0.1",
     "hapi": "^8.4.0",
+    "image-diff": "^1.0.1",
     "lodash-node": "^3.6.0",
-    "pdiffy": "^0.3.0",
     "sf": "^0.1.7"
   }
 }
