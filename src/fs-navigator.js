@@ -1,41 +1,41 @@
 var comparator = require('./comparator.js'),
-    _ = require('lodash-node');
+    _ = require('lodash-node'),
+    walk = require('walkdir'),
+    Path = require('path'),
+    async = require('async');
 
 module.exports.traverse = function(tree, callback) {
 
-  var analysis = {},
-      comparisonCount = 0,
-      comparisonsPerformed = 0;
+  var analysis = [];
+  var files = [];
+  var versions = {};
 
-  _.each(tree.children, function(platform) {
-    analysis[platform.name] = {};
-    _.each(platform.children, function(browser) {
-      analysis[platform.name][browser.name] = {};
-      _.each(browser.children, function(version) {
-        analysis[platform.name][browser.name][version.name] = [];
-        comparisonCount += version.children.length;
-        _.each(version.children, function(image) {
-          console.log('ddde');
-          comparator.comp(image, function(err, diff) {
+  walk.sync(tree, function(path, stat) {
 
-            console.log(arguments);
-            if (err) {
-              console.error(err);
-            }
+    if (stat.isFile()) {
+      files.push(Path.relative(tree, path));
+    };
 
-            analysis[platform.name][browser.name][version.name].push(diff);
-            comparisonsPerformed += 1;
-
-            console.log(comparisonsPerformed, comparisonCount);
-
-            if (comparisonCount == comparisonsPerformed) {
-              callback(null, analysis);
-            }
-
-          });
-
-        });
-      });
-    });
   });
+
+  async.each(files, function(file, callback) {
+
+    var parts = path.split('/');
+    var platform = parts[0],
+        browser = parts[1],
+        version = parts[2];
+
+    comparator.comp(image, function(err, diff) {
+
+      if (err) {
+        console.error(err);
+      }
+
+
+    });
+
+  }, function(err) {
+    callback(err, analysis);
+  });
+
 }

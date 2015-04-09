@@ -18,7 +18,8 @@ server.views({
     engines: {
         html: require('handlebars')
     },
-    path: Path.join(__dirname, 'src/public'),
+    path: Path.join(__dirname, 'src/public/views'),
+    layoutPath: Path.join(__dirname, 'src/public/layouts'),
     helpersPath: Path.join(__dirname, 'src/handlebars-helpers')
 });
 
@@ -38,10 +39,15 @@ server.route({
     path: '/',
     handler: function (request, reply) {
 
-      var screenshots = tree(config.screenshots+'/current');
+      db.find({owner: 'antony'}, function(err, doc) {
+        console.log(doc);
 
-      screenshots.then(function (tree) {
-          reply.view('index', {screenshots: tree});
+        if (err || !doc) {
+          console.error(err || 'Document not found');
+          reply().code(404);
+        }
+
+        reply.view('dashboard', {screenshots: doc.state}, {layout: 'layout'});
       });
 
     }
@@ -58,8 +64,17 @@ server.route({
 
       current.then(function (tree) {
 
-        navigator.traverse(tree, function(err, analysis) {
-          reply(analysis);
+        navigator.traverse(currentDir, function(err, analysis) {
+
+          var doc = {
+            owner: 'antony',
+            state: analysis
+          }
+
+          db.insert(doc, function(err, newDoc) {
+            reply(analysis);
+          });
+
         });
 
       });
