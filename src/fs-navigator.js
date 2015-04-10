@@ -2,13 +2,14 @@ var comparator = require('./comparator.js'),
     _ = require('lodash-node'),
     walk = require('walkdir'),
     Path = require('path'),
-    async = require('async');
+    async = require('async'),
+    queue = require('queue');
 
 module.exports.traverse = function(tree, callback) {
 
   var analysis = {};
   var emitter = walk(tree);
-  var fileCount = 0;
+  var diffQ = queue();
 
   emitter.on('file',function(filename, stat) {
 
@@ -38,17 +39,21 @@ module.exports.traverse = function(tree, callback) {
       name: screenshot
     };
 
-    fileCount += 1;
+    diffQ.push(function(callback) {
 
-    comparator.comp(image, function(err, diff) {
+      comparator.comp(image, function(err, diff) {
 
-      if (err) {
-        console.error(err);
-      }
+        if (err) {
+          console.error(err);
+        }
 
-      analysis[platform][browser][version].push({
-        filename: screenshot,
-        diff: diff
+        analysis[platform][browser][version].push({
+          filename: screenshot,
+          diff: diff
+        });
+
+        callback();
+
       });
 
     });
@@ -56,6 +61,10 @@ module.exports.traverse = function(tree, callback) {
   });
 
   emitter.on('end', function() {
+    diffQ.start();
+  });
+
+  diffQ.on('end', function() {
     callback(null, analysis);
   });
 
