@@ -6,24 +6,31 @@ var comparator = require('./comparator.js'),
 
 module.exports.traverse = function(tree, callback) {
 
-  var analysis = [];
-  var files = [];
-  var versions = {};
+  var analysis = {};
+  var emitter = walk(tree);
 
-  walk.sync(tree, function(path, stat) {
+  emitter.on('file',function(filename, stat) {
 
-    if (stat.isFile()) {
-      files.push(Path.relative(tree, path));
-    };
+    var relative = Path.relative(tree, filename);
+    console.log('file from emitter: ', relative);
 
-  });
-
-  async.each(files, function(file, callback) {
-
-    var parts = path.split('/');
+    var parts = relative.split('/');
     var platform = parts[0],
         browser = parts[1],
-        version = parts[2];
+        version = parts[2],
+        screenshot = parts[3];
+
+    if (!analysis[platform]) {
+      analysis[platform] = {};
+    }
+
+    if (!analysis[platform][browser]) {
+      analysis[platform][browser] = {};
+    }
+
+    if (analysis[platform][browser][version]) {
+      analysis[platform][browser][version] = [];
+    }
 
     comparator.comp(image, function(err, diff) {
 
@@ -31,11 +38,13 @@ module.exports.traverse = function(tree, callback) {
         console.error(err);
       }
 
+      analysis[platform][browser][version].push({
+        filename: screenshot,
+        diff: diff
+      });
 
     });
 
-  }, function(err) {
-    callback(err, analysis);
   });
 
 }
