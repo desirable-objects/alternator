@@ -8,6 +8,7 @@ module.exports.traverse = function(tree, callback) {
 
   var analysis = {};
   var emitter = walk(tree);
+  var fileCount = 0;
 
   emitter.on('file',function(filename, stat) {
 
@@ -28,9 +29,16 @@ module.exports.traverse = function(tree, callback) {
       analysis[platform][browser] = {};
     }
 
-    if (analysis[platform][browser][version]) {
+    if (!analysis[platform][browser][version]) {
       analysis[platform][browser][version] = [];
     }
+
+    var image = {
+      path: relative,
+      name: screenshot
+    };
+
+    fileCount += 1;
 
     comparator.comp(image, function(err, diff) {
 
@@ -45,6 +53,10 @@ module.exports.traverse = function(tree, callback) {
 
     });
 
+  });
+
+  emitter.on('end', function() {
+    callback(null, analysis);
   });
 
 }
