@@ -3,7 +3,7 @@ var imageDiff = require('image-diff'),
     config = require('config'),
     Path = require('path');
 
-module.exports.comp = function(image, callback) {
+module.exports.compare = function(image, callback) {
 
     var currentDir = Path.join(__dirname, '..', config.screenshots, 'current');
     var previousDir = Path.join(__dirname, '..', config.screenshots, 'previous');
@@ -13,9 +13,12 @@ module.exports.comp = function(image, callback) {
     var diff = {};
     var diffImage = '/tmp/'+image.path;
 
+    var actualImage = Path.join(currentDir, image.path),
+        expectedImage = Path.join(previousDir, image.path);
+
     imageDiff({
-      actualImage: Path.join(currentDir, image.path),
-      expectedImage: Path.join(previousDir, image.path),
+      actualImage: actualImage,
+      expectedImage: expectedImage,
       diffImage: diffImage
     }, function (err, imagesAreSame) {
 
@@ -23,8 +26,9 @@ module.exports.comp = function(image, callback) {
         return callback(err);
       }
 
-      diff.name = image.name;
       diff.match = imagesAreSame;
+      diff.name = image.name;
+
       if (!imagesAreSame) {
         diff.difference = datauri(diffImage);
       }

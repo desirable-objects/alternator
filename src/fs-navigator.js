@@ -41,7 +41,7 @@ module.exports.traverse = function(tree, callback) {
 
     diffQ.push(function(callback) {
 
-      comparator.comp(image, function(err, diff) {
+      comparator.compare(image, function(err, diff) {
 
         if (err) {
           console.error(err);
@@ -49,6 +49,7 @@ module.exports.traverse = function(tree, callback) {
 
         analysis[platform][browser][version].push({
           filename: screenshot,
+          path: relative,
           diff: diff
         });
 

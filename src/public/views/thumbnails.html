@@ -1,0 +1,29 @@
+<section id="main-content">
+  <section class="wrapper site-min-height">
+    <h3><i class="fa fa-angle-right"></i> {{environment}}</h3>
+    <hr>
+    <div class="row mt">
+      {{#each thumbnails}}
+      <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 desc">
+        <div class="project-wrapper">
+          <div class="project">
+            <div class="photo-wrapper {{#if diff.match}}match{{/if}}">
+              <div class="photo">
+                <a class="fancybox" href="/zoom/{{path}}">
+                  <img style="background:url(/s3/{{path}}); background-size: 100%;" class="diff-{{@index}} img-responsive" src="{{#if diff.match}}/s3/{{path}}{{else}}{{diff.difference}}{{/if}}" alt="">
+                </a>
+              </div>
+              <div class="overlay"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </section>
+</section>
+<script type="text/javascript">
+$(function() {
+  jQuery(".fancybox").fancybox({type: 'iframe', width: '90%', height: '90%'});
+});
+</script>
