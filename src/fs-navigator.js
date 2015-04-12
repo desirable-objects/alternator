@@ -5,15 +5,15 @@ var comparator = require('./comparator.js'),
     async = require('async'),
     queue = require('queue');
 
-module.exports.traverse = function(tree, callback) {
+module.exports.traverse = function(metadata, callback) {
 
   var analysis = {};
-  var emitter = walk(tree);
+  var emitter = walk(metadata.currentDir);
   var diffQ = queue();
 
   emitter.on('file',function(filename, stat) {
 
-    var relative = Path.relative(tree, filename);
+    var relative = Path.relative(metadata.currentDir, filename);
     console.log('file from emitter: ', relative);
 
     var parts = relative.split('/');
@@ -41,7 +41,8 @@ module.exports.traverse = function(tree, callback) {
 
     diffQ.push(function(callback) {
 
-      comparator.compare(image, function(err, diff) {
+      console.log(metadata);
+      comparator.compare(metadata, image, function(err, diff) {
 
         if (err) {
           console.error(err);

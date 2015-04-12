@@ -1,17 +1,21 @@
 var imageDiff = require('image-diff'),
     datauri = require('datauri'),
     config = require('config'),
-    Path = require('path');
+    Path = require('path'),
+    sf = require('sf');
 
-module.exports.compare = function(image, callback) {
+module.exports.compare = function(metadata, image, callback) {
 
-    var currentDir = Path.join(__dirname, '..', config.screenshots, 'current');
-    var previousDir = Path.join(__dirname, '..', config.screenshots, 'previous');
+    var currentDir = metadata.currentDir;
+    var previousDir = metadata.previousDir;
 
-    console.log(currentDir, previousDir);
+    console.log('comping', currentDir, previousDir);
 
     var diff = {};
-    var diffImage = '/tmp/'+image.path;
+    var diffImage = sf('/tmp/{owner}/temp/{filename}', {
+      owner: metadata.owner,
+      filename: image.path
+    });
 
     var actualImage = Path.join(currentDir, image.path),
         expectedImage = Path.join(previousDir, image.path);
