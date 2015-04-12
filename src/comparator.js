@@ -6,19 +6,15 @@ var imageDiff = require('image-diff'),
 
 module.exports.compare = function(metadata, image, callback) {
 
-    var currentDir = metadata.currentDir;
-    var previousDir = metadata.previousDir;
-
-    console.log('comping', currentDir, previousDir);
-
     var diff = {};
-    var diffImage = sf('/tmp/{owner}/temp/{filename}', {
-      owner: metadata.owner,
+    var workDir = sf(config.workDir, metadata);
+    var diffImage = sf('{workDir}/temp/{filename}', {
+      workDir: workDir,
       filename: image.path
     });
 
-    var actualImage = Path.join(currentDir, image.path),
-        expectedImage = Path.join(previousDir, image.path);
+    var actualImage = Path.join(metadata.currentDir, image.path),
+        expectedImage = Path.join(metadata.previousDir, image.path);
 
     imageDiff({
       actualImage: actualImage,

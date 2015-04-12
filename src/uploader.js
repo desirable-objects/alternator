@@ -3,12 +3,14 @@ var fs = require('fs'),
     httpClient = require('request'),
     unzip = require('unzip'),
     mkdirp = require('mkdirp'),
-    sf = require('sf');
+    sf = require('sf'),
+    config = require('config');
 
 module.exports.upload = function(metadata, assets, callback) {
 
-  var currentDir = sf('/tmp/{owner}/{build}', metadata),
-      previousDir = sf('/tmp/{owner}/{previous}', metadata);
+  var workDir = sf(config.workDir, metadata),
+      currentDir = sf('{workDir}/{build}', {workDir: workDir, build: metadata.build}),
+      previousDir = sf('{workDir}/{previous}', {workDir: workDir, previous: metadata.previous});
 
       metadata.currentDir = currentDir;
       metadata.previousDir = previousDir;

@@ -43,7 +43,7 @@ server.route({
   path: '/s3/{param*}',
   handler: {
     directory: {
-      path: 'test/current',
+      path: sf(config.workDir, {owner: 'antony'}),
       listing: true
     }
   }
@@ -63,18 +63,18 @@ server.route({
 server.route({
     method: 'GET',
     path: '/',
+    config: {
+      pre: [
+        {method: fetchLastBuild, assign: 'lastBuild'}
+      ]
+    },
     handler: function (request, reply) {
 
-      db.findOne({owner: 'antony'}, function(err, doc) {
+      if (!request.pre.lastBuild) {
+        return reply.view('dashboard', {message: {severity: 'warning', content: '<b>Oops!</b> You have not published any builds yet! Read the getting started documentation.'}}, {layout: 'layout'});
+      }
 
-        if (err || !doc) {
-          console.error(err || 'Document not found');
-          reply().code(404);
-        }
-
-        reply.view('dashboard', {screenshots: doc.state}, {layout: 'layout'});
-      });
-
+      reply.view('dashboard', {screenshots: request.pre.lastBuild.state}, {layout: 'layout'});
     }
 });
 
@@ -177,23 +177,38 @@ server.route({
     handler: function (request, reply) {
 
       var lastBuild = request.pre.lastBuild,
-          buildState = _.assign(lastBuild.metaData, request.params);
+          buildState = _.assign(lastBuild.metadata, request.params);
 
       var platform = request.params.platform.toUpperCase(),
-        environment = sf('Differences for {browser} {version} on {platform} between build {previous} -> {current}', request.params),
+        environment = sf('Differences for {browser} {version} on {platform} between build {previous} -> {current}', buildState),
         lastBuildThumbs = lastBuild.state[platform][request.params.browser][request.params.version];
 
-      reply.view('thumbnails', {environment: environment, thumbnails: lastBuildThumbs}, {layout: 'layout'});
+        console.log(lastBuild);
+      reply.view('thumbnails', {currentBuild: lastBuild.metadata.build, environment: environment, thumbnails: lastBuildThumbs}, {layout: 'layout'});
 
 
     }
 });
 
-// var dummy = {
-//   owner: 'antony',
-//   state: {"LINUX":{"firefox":{"37_0":[{"filename":"browser.png","path":"LINUX/firefox/37_0/browser.png","diff":{"match":false,"name":"browser.png","difference":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABPwAAAPkAgMAAABAccgdAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAlQTFRF/////wAA////miskgwAAAAF0Uk5TzNI0Vv0AAAABYktHRACIBR1IAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAB3UlEQVR42u3WMW6EMBAFUFz4BvF9NgU9K83c/yoZAUmRatkUFsp7jTHV15dhvCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACU6I/jYcS+fG95STv6a9sSY3+hv0tanv217WhOf5e0tWePyKgT2GNsmWvMznQnfV0zR2Sdv2XU+qzd7Ex3Uv19nv3tPervmpE//fWzv5yd6U5Gy9/9zY50Kx9LHv+/ur/4fq+L6q/mbkbdn83fv6sxzPvac5sd4d7yMTsBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPwHXx5tJprwZChfAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTA0LTEwVDIwOjM3OjAwKzAxOjAwfdKwHgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNS0wNC0xMFQyMDozNzowMCswMTowMAyPCKIAAAAASUVORK5CYII="}},{"filename":"number2.png","path":"LINUX/firefox/37_0/number2.png","diff":{"match":false,"name":"number2.png","difference":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABPwAAAPkAgMAAABAccgdAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAlQTFRF/////wAA////miskgwAAAAF0Uk5TzNI0Vv0AAAABYktHRACIBR1IAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAB3UlEQVR42u3WMW6EMBAFUFz4BvF9NgU9K83c/yoZAUmRatkUFsp7jTHV15dhvCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACU6I/jYcS+fG95STv6a9sSY3+hv0tanv217WhOf5e0tWePyKgT2GNsmWvMznQnfV0zR2Sdv2XU+qzd7Ex3Uv19nv3tPervmpE//fWzv5yd6U5Gy9/9zY50Kx9LHv+/ur/4fq+L6q/mbkbdn83fv6sxzPvac5sd4d7yMTsBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPwHXx5tJprwZChfAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTA0LTEwVDIwOjM3OjAwKzAxOjAwfdKwHgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNS0wNC0xMFQyMDozNzowMCswMTowMAyPCKIAAAAASUVORK5CYII="}},{"filename":"item3.png","path":"LINUX/firefox/37_0/item3.png","diff":{"match":true,"name":"item3.png"}}]}}}
-// };
-//
-// db.insert(dummy, function(err, newDoc) {
+server.register(require('bell'), function (err) {
+
+  server.auth.strategy('github', 'bell', {
+    provider: 'github',
+    password: 'vile&evil',
+    clientId: '2732fc45e6bd422478db',
+    clientSecret: '6450805b2f0a07d436852be91cd771f1b3f03f0b'
+  });
+
+  server.route({
+    method: ['GET', 'POST'],
+    path: '/login',
+    config: {
+      auth: 'github',
+      handler: function (request, reply) {
+        return reply.redirect('/');
+      }
+    }
+  });
+
   server.start();
-// });
+});
