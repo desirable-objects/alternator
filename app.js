@@ -6,16 +6,20 @@ var Hapi = require('hapi'),
     Joi = require('joi'),
     async = require('async'),
     navigator = require('./src/fs-navigator.js'),
-    Datastore = require('nedb'),
     _ = require('lodash-node'),
     Boom = require('boom'),
     uploader = require('./src/uploader'),
-    db = new Datastore();
+    Build;
 
 var server = new Hapi.Server();
 server.connection({
     host: 'localhost',
     port: 8000
+});
+
+var db = require('./src/db')(function() {
+  console.log('Connected to DB');
+  Build = require('mongoose').model('Build');
 });
 
 server.views({
@@ -98,7 +102,7 @@ server.route({
 });
 
 function fetchLastBuild(request, reply) {
-  db.findOne({owner: 'antony'}, function(err, doc) {
+  Build.findOne({owner: 'antony'}, {sort: '_id'}, function(err, doc) {
 
     if (err || !doc) {
       console.error(err || 'Document not found');
@@ -146,13 +150,13 @@ server.route({
 
         navigator.traverse(metadata, function(err, analysis) {
 
-          var doc = {
+          var doc = new Build({
             owner: metadata.owner,
             metadata: metadata,
             state: analysis
-          }
+          });
 
-          db.insert(doc, function(err, newDoc) {
+          doc.save(function(err, newDoc) {
             return reply(analysis);
           });
 
