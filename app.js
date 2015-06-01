@@ -9,6 +9,8 @@ var Hapi = require('hapi'),
     _ = require('lodash-node'),
     Boom = require('boom'),
     uploader = require('./src/uploader'),
+    fs = require('fs'),
+    comparator = require('./src/comparator'),
     Build;
 
 var server = new Hapi.Server();
@@ -102,7 +104,7 @@ server.route({
 });
 
 function fetchLastBuild(request, reply) {
-  Build.findOne({owner: 'antony'}, {sort: '_id'}, function(err, doc) {
+  Build.findOne({owner: 'antony'}).sort('-_id').exec(function(err, doc) {
 
     if (err || !doc) {
       console.error(err || 'Document not found');
@@ -117,13 +119,16 @@ function fetchLastBuild(request, reply) {
 server.route({
 
   method: 'POST',
-  path: '/api/compare/{build}',
+  path: '/api/compare/{build}/{platform}/{browser}/{version}',
   config: {
     pre: [
       {method: fetchLastBuild, assign: 'previous'}
     ],
     validate: {
       params: {
+        platform: Joi.string().required().description('Platform Name'),
+        browser: Joi.string().required().description('Browser Name'),
+        version: Joi.string().required().description('Browser Version'),
         build: Joi.string().required().description('Build ID')
       },
       payload: {
@@ -133,36 +138,49 @@ server.route({
   },
   handler: function (request, reply) {
 
-    var metadata = {
+    var metadata = _.defaults(request.params, {
       owner: 'antony',
       previous: request.pre.previous ? request.pre.previous.metadata.build : 'initial',
-      build: request.params.build,
       currentDir: null,
       previousDir: null
-    };
+    });
 
-    var assets = request.payload.assets;
-    uploader.upload(metadata, assets, function(err, metadata) {
+    uploader.upload(metadata, request.payload.assets, function(err, metadata) {
 
-      var current = tree(metadata.currentDir);
+      fs.readdir(metadata.currentDir, function(err, files) {
 
-      current.then(function (tree) {
+        if (err) {
+          console.error('Could not read files', metadata);
+          return reply(Boom.internal());
+        }
 
-        navigator.traverse(metadata, function(err, analysis) {
+        async.map(files, function(image, callback) {
 
-          var doc = new Build({
-            owner: metadata.owner,
-            metadata: metadata,
-            state: analysis
+          comparator.compare(metadata, image, function(err, result) {
+            console.log(result);
+            callback(err, result);
           });
 
-          doc.save(function(err, newDoc) {
-            return reply(analysis);
-          });
+        }, function(err, analysis) {
+
+            if (err) {
+              console.error('Could not process comparison on files', metadata);
+              return reply(Boom.internal());
+            }
+
+            var doc = new Build({
+              owner: metadata.owner,
+              metadata: metadata,
+              state: analysis
+            });
+
+            doc.save(function(err, newDoc) {
+              return reply(analysis);
+            });
 
         });
 
-      });
+      })
 
     });
 
@@ -187,8 +205,7 @@ server.route({
         environment = sf('Differences for {browser} {version} on {platform} between build {previous} -> {current}', buildState),
         lastBuildThumbs = lastBuild.state[platform][request.params.browser][request.params.version];
 
-        console.log(lastBuild);
-      reply.view('thumbnails', {currentBuild: lastBuild.metadata.build, environment: environment, thumbnails: lastBuildThumbs}, {layout: 'layout'});
+        reply.view('thumbnails', {currentBuild: lastBuild.metadata.build, environment: environment, thumbnails: lastBuildThumbs}, {layout: 'layout'});
 
 
     }

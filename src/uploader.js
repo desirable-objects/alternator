@@ -4,13 +4,18 @@ var fs = require('fs'),
     unzip = require('unzip'),
     mkdirp = require('mkdirp'),
     sf = require('sf'),
-    config = require('config');
+    config = require('config'),
+    _ = require('lodash-node');
 
 module.exports.upload = function(metadata, assets, callback) {
 
-  var workDir = sf(config.workDir, metadata),
-      currentDir = sf('{workDir}/{build}', {workDir: workDir, build: metadata.build}),
-      previousDir = sf('{workDir}/{previous}', {workDir: workDir, previous: metadata.previous});
+  var workDir = sf(config.workDir, metadata);
+  var directoryConfig = _.defaults({workDir: workDir}, metadata);
+
+  console.log(workDir, directoryConfig)
+
+  var currentDir = sf('{workDir}/{build}/{platform}/{browser}/{version}', directoryConfig),
+      previousDir = sf('{workDir}/{previous}/{platform}/{browser}/{version}', directoryConfig);
 
       metadata.currentDir = currentDir;
       metadata.previousDir = previousDir;

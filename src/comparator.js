@@ -13,8 +13,8 @@ module.exports.compare = function(metadata, image, callback) {
       filename: image.path
     });
 
-    var actualImage = Path.join(metadata.currentDir, image.path),
-        expectedImage = Path.join(metadata.previousDir, image.path);
+    var actualImage = Path.join(metadata.currentDir, image),
+        expectedImage = Path.join(metadata.previousDir, image);
 
     imageDiff({
       actualImage: actualImage,
@@ -27,7 +27,7 @@ module.exports.compare = function(metadata, image, callback) {
       }
 
       diff.match = imagesAreSame;
-      diff.name = image.name;
+      diff.name = image;
 
       if (!imagesAreSame) {
         diff.difference = datauri(diffImage);
