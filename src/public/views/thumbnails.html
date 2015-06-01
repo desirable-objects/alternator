@@ -6,10 +6,10 @@
       <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 desc">
         <div class="project-wrapper">
           <div class="project">
-            <div class="photo-wrapper {{#if diff.match}}match{{/if}}">
+            <div class="photo-wrapper {{#if match}}match{{/if}}">
               <div class="photo">
-                <a class="fancybox" href="/zoom/{{../currentBuild}}/{{path}}">
-                  <img style="background:url(/s3/{{../currentBuild}}/{{path}}); background-size: 100%;" class="diff-{{@index}} img-responsive" src="{{#if diff.match}}/s3/{{../currentBuild}}/{{path}}{{else}}{{diff.difference}}{{/if}}" alt="{{diff.match}}">
+                <a class="fancybox" href="/zoom/{{../thumbsPath}}/{{name}}">
+                  <img style="background:url(/s3/{{../thumbsPath}}/{{name}}); background-size: 100%;" class="diff-{{@index}} img-responsive" src="{{#if match}}/s3/{{../../thumbsPath}}/{{name}}{{else}}{{difference}}{{/if}}" alt="{{match}}">
                 </a>
               </div>
               <div class="overlay"></div>

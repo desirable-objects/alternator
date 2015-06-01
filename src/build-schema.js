@@ -7,7 +7,10 @@ var schema = mongoose.Schema({
     previous: String,
     build: String,
     currentDir: String,
-    previousDir: String
+    previousDir: String,
+    browser: String,
+    platform: String,
+    version: String
   },
   state: Object
 });

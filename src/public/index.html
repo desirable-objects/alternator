@@ -224,24 +224,20 @@
             </a>
           </li>
 
-          {{#each screenshots.children}}
           <li class="sub-menu mt">
-            <a href="/changes/{{lowercase name}}">
-              <i class="fa fa-{{lowercase name}}"></i>
-              <span>{{capitalise name}}</span>
+            <a href="/changes/{{lowercase build.metadata.platform}}">
+              <i class="fa fa-{{lowercase build.metadata.platform}}"></i>
+              <span>{{capitalise build.metadata.platform}}</span>
             </a>
             <ul class="sub">
-              {{#each children}}
                 <li>
-                  <a href="/changes/{{lowercase parent}}/{{lowercase name}}">
+                  <a href="/changes/{{lowercase build.metadata.platform}}/{{lowercase build.metadata.browser}}">
                     <i class="fa fa-globe"></i>
-                    <span>{{capitalise name}}</span>
+                    <span>{{capitalise build.metadata.browser}}</span>
                   </a>
                 </li>
-              {{/each}}
             </ul>
           </li>
-          {{/each}}
 
         </ul>
         <!-- sidebar menu end-->

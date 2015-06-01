@@ -227,36 +227,32 @@
             </a>
           </li>
 
-          {{#if screenshots}}
-            {{#each screenshots}}
+          {{#if build}}
+
             <li class="sub-menu mt">
-              <a href="/changes/{{lowercase @key}}">
-                <i class="fa fa-{{lowercase @key}}"></i>
-                <span>{{capitalise @key}}</span>
+              <a href="/changes/{{lowercase build.metadata.platform}}">
+                <i class="fa fa-{{lowercase build.metadata.platform}}"></i>
+                <span>{{capitalise build.metadata.platform}}</span>
               </a>
               <ul class="sub">
-                {{#each this}}
-                  <li class="sub-menu">
-                    <a href="/changes/{{lowercase @../key}}/{{lowercase @key}}">
+                  <li>
+                    <a href="/changes/{{lowercase build.metadata.platform}}/{{lowercase build.metadata.browser}}">
                       <i class="fa fa-globe"></i>
-                      <span>{{capitalise @key}}</span>
+                      <span>{{capitalise build.metadata.browser}}</span>
                     </a>
                     <ul class="sub">
-                      {{#each this}}
-                      <li>
-                        <a href="/changes/{{lowercase @../../key}}/{{lowercase @../key}}/{{lowercase @key}}">
-                          <i class="fa fa-circle-o"></i>
-                          <span>{{browser-version @key}}</span>
-                        </a>
-                      </li>
-                      {{/each}}
+                        <li>
+                          <a href="/changes/{{lowercase build.metadata.platform}}/{{lowercase build.metadata.browser}}/{{lowercase build.metadata.version}}">
+                            <i class="fa fa-asterisk"></i>
+                            <span>{{build.metadata.version}}</span>
+                          </a>
+                        </li>
                     </ul>
                   </li>
-                {{/each}}
               </ul>
             </li>
-            {{/each}}
-          {{/if}}
+
+            {{/if}}
 
         </ul>
         <!-- sidebar menu end-->

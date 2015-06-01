@@ -80,14 +80,23 @@ server.route({
         return reply.view('dashboard', {message: {severity: 'warning', content: '<b>Oops!</b> You have not published any builds yet! Read the getting started documentation.'}}, {layout: 'layout'});
       }
 
-      reply.view('dashboard', {screenshots: request.pre.lastBuild.state}, {layout: 'layout'});
+      reply.view('dashboard', {build: request.pre.lastBuild}, {layout: 'layout'});
     }
 });
 
 server.route({
   method: 'GET',
-  path: '/zoom/{platform}/{browser}/{version}/{image}',
+  path: '/zoom/{build}/{platform}/{browser}/{version}/{image}',
   config: {
+    validate: {
+      params: {
+        platform: Joi.string().required().description('Platform Name'),
+        browser: Joi.string().required().description('Browser Name'),
+        version: Joi.string().required().description('Browser Version'),
+        build: Joi.string().required().description('Build ID'),
+        image: Joi.string().required().description('Image name')
+      }
+    },
     pre: [
       {method: fetchLastBuild, assign: 'lastBuild'}
     ]
@@ -95,10 +104,11 @@ server.route({
   handler: function (request, reply) {
 
     var platform = request.params.platform.toUpperCase();
-    var environment = request.pre.lastBuild.state[platform][request.params.browser][request.params.version];
-    var image = _.find(environment, {diff: {name: request.params.image}});
+    var environment = request.pre.lastBuild.state;
+    var image = _.find(environment, {name: request.params.image});
+    var imagePath = sf('{build}/{platform}/{browser}/{version}/{image}', request.params)
 
-    reply.view('zoom', {image: image});
+    reply.view('zoom', {image: image, imagePath: imagePath});
 
   }
 });
@@ -203,9 +213,10 @@ server.route({
 
       var platform = request.params.platform.toUpperCase(),
         environment = sf('Differences for {browser} {version} on {platform} between build {previous} -> {current}', buildState),
-        lastBuildThumbs = lastBuild.state[platform][request.params.browser][request.params.version];
+        thumbsPath = sf('{build}/{platform}/{browser}/{version}', buildState)
+        lastBuildThumbs = lastBuild.state;
 
-        reply.view('thumbnails', {currentBuild: lastBuild.metadata.build, environment: environment, thumbnails: lastBuildThumbs}, {layout: 'layout'});
+        reply.view('thumbnails', {thumbsPath: thumbsPath, environment: environment, thumbnails: lastBuildThumbs}, {layout: 'layout'});
 
 
     }
