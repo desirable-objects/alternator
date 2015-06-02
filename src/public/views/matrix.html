@@ -1,0 +1,42 @@
+<div class="row mt">
+  <div class="col-xs-12 desc">
+
+    <div class="showback">
+      <h4>Difference Matrix</h4>
+      <p>
+        This table shows differences in build {{build.metadata.build}}. Click a browser version to review differences
+      </p>
+    </div>
+
+    <table cellpadding="0" cellspacing="0" border="0" class="display table table-bordered" id="result-matrix">
+        <thead>
+          <tr>
+              <th>Platform</th>
+              <th>Browser</th>
+              <th>Version</th>
+              <th class="hidden-phone">Comparisons</th>
+              <th>Differences</th>
+          </tr>
+        </thead>
+        <tbody>
+            <tr class="{{#if passed}}passing{{else}}failing{{/if}}" data-screenshots-url="/changes/{{build.metadata.platform}}/{{build.metadata.browser}}/{{build.metadata.version}}">
+                <td>{{build.metadata.platform}}</td>
+                <td>{{build.metadata.browser}}</td>
+                <td class="center">{{build.metadata.version}}</td>
+                <td class="center hidden-phone">{{build.state.length}}</td>
+                <td class="center">{{build._extra.differences}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+  </div>
+</div>
+
+<script>
+$(function() {
+  $('#result-matrix tr').on('click', function(e) {
+    var url = $(this).attr('data-screenshots-url');
+    window.location = url;
+  });
+});
+</script>

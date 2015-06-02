@@ -1,24 +1,33 @@
 
-    <h3><i class="fa fa-angle-right"></i> {{environment}}</h3>
-    <hr>
-    <div class="row mt">
-      {{#each thumbnails}}
-      <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 desc">
-        <div class="project-wrapper">
-          <div class="project">
-            <div class="photo-wrapper {{#if match}}match{{/if}}">
-              <div class="photo">
-                <a class="fancybox" href="/zoom/{{../thumbsPath}}/{{name}}">
-                  <img style="background:url(/s3/{{../thumbsPath}}/{{name}}); background-size: 100%;" class="diff-{{@index}} img-responsive" src="{{#if match}}/s3/{{../../thumbsPath}}/{{name}}{{else}}{{difference}}{{/if}}" alt="{{match}}">
-                </a>
+<div class="row mt">
+  <div class="col-xs-12 desc">
+
+    <div class="showback">
+      <h4>Screenshots</h4>
+      <p>{{environment}}. Click a screenshot to examine in more detail.
+      </p>
+    </div>
+      <div class="row mt">
+        {{#each thumbnails}}
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 desc">
+          <div class="project-wrapper">
+            <div class="project">
+              <div class="photo-wrapper {{#if match}}match{{/if}}">
+                <div class="photo">
+                  <a class="fancybox" href="/zoom/{{../thumbsPath}}/{{name}}">
+                    <img style="background:url(/s3/{{../thumbsPath}}/{{name}}); background-size: 100%;" class="diff-{{@index}} img-responsive" src="{{#if match}}/s3/{{../../thumbsPath}}/{{name}}{{else}}{{difference}}{{/if}}" alt="{{match}}">
+                  </a>
+                </div>
+                <div class="overlay"></div>
               </div>
-              <div class="overlay"></div>
             </div>
           </div>
         </div>
+        {{/each}}
       </div>
-      {{/each}}
+
     </div>
+  </div>
 
 <script type="text/javascript">
 $(function() {

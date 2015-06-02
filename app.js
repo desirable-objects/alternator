@@ -85,6 +85,33 @@ server.route({
 });
 
 server.route({
+    method: 'GET',
+    path: '/matrix/{browser}',
+    config: {
+      pre: [
+        {method: fetchLastBuild, assign: 'lastBuild'}
+      ]
+    },
+    handler: function (request, reply) {
+
+      var lastBuild = request.pre.lastBuild;
+
+      if (!lastBuild) {
+        return reply.view('dashboard', {message: {severity: 'warning', content: '<b>Oops!</b> You have not published any builds yet! Read the getting started documentation.'}}, {layout: 'layout'});
+      }
+
+      var diffs = _.filter(lastBuild.state, 'match', false);
+
+      lastBuild._extra = {
+        differences: (diffs || []).length,
+        passed: !!diffs
+      };
+
+      reply.view('matrix', {build: request.pre.lastBuild}, {layout: 'layout'});
+    }
+});
+
+server.route({
   method: 'GET',
   path: '/zoom/{build}/{platform}/{browser}/{version}/{image}',
   config: {
@@ -212,12 +239,11 @@ server.route({
           buildState = _.assign(lastBuild.metadata, request.params);
 
       var platform = request.params.platform.toUpperCase(),
-        environment = sf('Differences for {browser} {version} on {platform} between build {previous} -> {current}', buildState),
+        environment = sf('Differences for {browser} {version} on {platform} between build {previous} -> {build}', buildState),
         thumbsPath = sf('{build}/{platform}/{browser}/{version}', buildState)
         lastBuildThumbs = lastBuild.state;
 
         reply.view('thumbnails', {thumbsPath: thumbsPath, environment: environment, thumbnails: lastBuildThumbs}, {layout: 'layout'});
-
 
     }
 });
