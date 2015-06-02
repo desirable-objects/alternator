@@ -70,16 +70,16 @@ server.route({
     path: '/',
     config: {
       pre: [
-        {method: fetchLastBuild, assign: 'lastBuild'}
+        {method: fetchLastBuild, assign: 'currentBuild'}
       ]
     },
     handler: function (request, reply) {
 
-      if (!request.pre.lastBuild) {
+      if (!request.pre.currentBuild) {
         return reply.view('dashboard', {message: {severity: 'warning', content: '<b>Oops!</b> You have not published any builds yet! Read the getting started documentation.'}}, {layout: 'layout'});
       }
 
-      reply.view('dashboard', {build: request.pre.lastBuild}, {layout: 'layout'});
+      reply.view('dashboard', {build: request.pre.currentBuild}, {layout: 'layout'});
     }
 });
 
