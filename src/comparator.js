@@ -10,7 +10,7 @@ module.exports.compare = function(metadata, image, callback) {
     var workDir = sf(config.workDir, metadata);
     var diffImage = sf('{workDir}/temp/{filename}', {
       workDir: workDir,
-      filename: image.path
+      filename: image
     });
 
     var actualImage = Path.join(metadata.currentDir, image),

@@ -5,7 +5,6 @@ var Hapi = require('hapi'),
     sf = require('sf'),
     Joi = require('joi'),
     async = require('async'),
-    navigator = require('./src/fs-navigator.js'),
     _ = require('lodash-node'),
     Boom = require('boom'),
     uploader = require('./src/uploader'),
@@ -153,13 +152,33 @@ function fetchLastBuild(request, reply) {
   });
 }
 
+function fetchCurrentBuild(request, reply) {
+  Build.findOne({owner: 'antony', build: request.params.build}).exec(function(err, doc) {
+
+    if (err) {
+      console.error(err || 'Document not found');
+      return reply().code(404);
+    }
+
+    reply(doc);
+
+  });
+}
+
 server.route({
 
   method: 'POST',
   path: '/api/compare/{build}/{platform}/{browser}/{version}',
   config: {
     pre: [
-      {method: fetchLastBuild, assign: 'previous'}
+      [
+        {method: fetchLastBuild, assign: 'previous'},
+        {method: fetchCurrentBuild, assign: 'current'}
+      ],
+      {method: uploadAssets, assign: 'metadata'},
+      {method: readUploadedFiles, assign: 'fileList'},
+      {method: runCompare, assign: 'analysis'},
+      {method: updateBuild, assign: 'build'}
     ],
     validate: {
       params: {
@@ -174,56 +193,108 @@ server.route({
     }
   },
   handler: function (request, reply) {
-
-    var metadata = _.defaults(request.params, {
-      owner: 'antony',
-      previous: request.pre.previous ? request.pre.previous.metadata.build : 'initial',
-      currentDir: null,
-      previousDir: null
-    });
-
-    uploader.upload(metadata, request.payload.assets, function(err, metadata) {
-
-      fs.readdir(metadata.currentDir, function(err, files) {
-
-        if (err) {
-          console.error('Could not read files', metadata);
-          return reply(Boom.internal());
-        }
-
-        async.map(files, function(image, callback) {
-
-          comparator.compare(metadata, image, function(err, result) {
-            console.log(result);
-            callback(err, result);
-          });
-
-        }, function(err, analysis) {
-
-            if (err) {
-              console.error('Could not process comparison on files', metadata);
-              return reply(Boom.internal());
-            }
-
-            var doc = new Build({
-              owner: metadata.owner,
-              metadata: metadata,
-              state: analysis
-            });
-
-            doc.save(function(err, newDoc) {
-              return reply(analysis);
-            });
-
-        });
-
-      })
-
-    });
-
+    return reply(request.pre.analysis);
   }
 
 });
+
+function updateBuild(request, reply) {
+
+  var build = request.pre.currentBuild,
+      metadata = request.pre.metadata,
+      analysis = request.pre.analysis;
+
+  var newState = {
+    platform: metadata.platform,
+    browser: metadata.browser,
+    version: metadata.version,
+    comparisons: analysis
+  };
+
+  if (!build) {
+    build = new Build({
+      owner: metadata.owner,
+      previous: metadata.previous,
+      build: metadata.build,
+      state: [newState]
+    });
+  } else {
+    build.state.push(newState)
+  }
+
+  build.save(function(err, newDoc) {
+
+    if (err) {
+      console.error(err);
+      return reply(Boom.internal(err));
+    }
+
+    reply(analysis);
+  });
+
+}
+
+function runCompare(request, reply) {
+
+  var metadata = request.pre.metadata;
+
+  async.map(request.pre.fileList, function(image, callback) {
+
+    comparator.compare(metadata, image, function(err, result) {
+      callback(err, result);
+    });
+
+  }, function(err, analysis) {
+
+    if (err) {
+      console.error('Could not process comparison on files', metadata);
+      return reply(Boom.internal());
+    }
+
+    return reply(analysis);
+
+  });
+
+}
+
+function readUploadedFiles(request, reply) {
+
+  var metadata = request.pre.metadata;
+
+  fs.readdir(metadata.currentDir, function(err, files) {
+
+    if (err) {
+      console.error('Could not read files', metadata);
+      return reply(Boom.internal());
+    }
+
+    return reply(files);
+
+  });
+
+}
+
+function uploadAssets(request, reply) {
+
+  var metadata = _.defaults(request.params, {
+    owner: 'antony',
+    previous: request.pre.previous ? request.pre.previous.build : 'initial',
+    currentDir: null,
+    previousDir: null
+  });
+
+  uploader.upload(metadata, request.payload.assets, function(err, uploadMetadata) {
+
+    if (err) {
+      console.error('Could not read files', uploadMetadata);
+      return reply(Boom.internal());
+    }
+
+    return reply(uploadMetadata);
+
+  });
+
+}
 
 server.route({
     method: 'GET',

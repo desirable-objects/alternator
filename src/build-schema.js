@@ -2,17 +2,17 @@ var mongoose = require('mongoose');
 
 var schema = mongoose.Schema({
   owner: String,
-  metadata: {
-    owner: String,
-    previous: String,
-    build: String,
-    currentDir: String,
-    previousDir: String,
-    browser: String,
+  previous: String,
+  build: String,
+  state: [{
     platform: String,
-    version: String
-  },
-  state: Object
+    browser: String,
+    version: String,
+    comparisons: [{
+      match: Boolean,
+      difference: String
+    }]
+  }]
 });
 
 mongoose.model('Build', schema);

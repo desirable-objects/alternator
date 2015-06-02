@@ -12,8 +12,6 @@ module.exports.upload = function(metadata, assets, callback) {
   var workDir = sf(config.workDir, metadata);
   var directoryConfig = _.defaults({workDir: workDir}, metadata);
 
-  console.log(workDir, directoryConfig)
-
   var currentDir = sf('{workDir}/{build}/{platform}/{browser}/{version}', directoryConfig),
       previousDir = sf('{workDir}/{previous}/{platform}/{browser}/{version}', directoryConfig);
 
